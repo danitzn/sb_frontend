@@ -161,7 +161,7 @@ export default function ChatPage() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">
-                  Almacén Chatbot
+                  Almacen Chatbot
                 </h1>
                 <p className="text-sm text-gray-600">
                   Base URL: {API_BASE_URL}
@@ -213,23 +213,23 @@ export default function ChatPage() {
                     <span className="text-3xl">🛒</span>
                   </div>
                   <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                    ¡Hola! Soy tu asistente
+                    ¡Hola! Soy Celeste, tu asistente
                   </h3>
                   <p className="text-gray-600 mb-4">
                     Haz clic en "Test Conexión" para verificar que la API esté funcionando.
                   </p>
                   <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3 max-w-lg mx-auto">
                     <div className="bg-blue-50 rounded-lg p-3 text-sm text-gray-700 border border-blue-100">
-                      💰 "¿Qué precios tienen los smartphones?"
+                      💰 "¿Qué precios tienen los helados?"
                     </div>
                     <div className="bg-blue-50 rounded-lg p-3 text-sm text-gray-700 border border-blue-100">
-                      📦 "¿Hay stock de laptops gaming?"
+                      📦 "¿Hay Cervezas"
                     </div>
                     <div className="bg-blue-50 rounded-lg p-3 text-sm text-gray-700 border border-blue-100">
                       🔍 "Muéstrame productos en oferta"
                     </div>
                     <div className="bg-blue-50 rounded-lg p-3 text-sm text-gray-700 border border-blue-100">
-                      📋 "¿Qué marcas de televisores tienen?"
+                      📋 "¿Qué marcas de cigarrillos tienen?"
                     </div>
                   </div>
                 </div>
