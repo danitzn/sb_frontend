@@ -161,7 +161,7 @@ export default function ChatPage() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">
-                  Almacen Chatbot
+                  Lynda Carolyn Chatbot
                 </h1>
                 <p className="text-sm text-gray-600">
                   Base URL: {API_BASE_URL}
@@ -229,7 +229,7 @@ export default function ChatPage() {
                       🔍 "Muéstrame productos en oferta"
                     </div>
                     <div className="bg-blue-50 rounded-lg p-3 text-sm text-gray-700 border border-blue-100">
-                      📋 "¿Qué marcas de cigarrillos tienen?"
+                      📋 "¿Qué marcas de Lacteos tienen?"
                     </div>
                   </div>
                 </div>
