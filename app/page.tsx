@@ -15,7 +15,7 @@ interface ChatResponse {
 }
 
 // URL base y path separados para mejor mantenimiento
-const API_BASE_URL = 'https://degree-dame-charger-charger.trycloudflare.com';
+const API_BASE_URL = 'https://did-delhi-processor-historical.trycloudflare.com';
 const API_CHAT_PATH = '/api/chat/cloud/';
 const CHAT_API_URL = `${API_BASE_URL}${API_CHAT_PATH}`;
 

@@ -13,7 +13,7 @@ interface TestResult {
 export default function CORSTestPage() {
   const [results, setResults] = useState<TestResult[]>([]);
   const [isTesting, setIsTesting] = useState(false);
-  const [customUrl, setCustomUrl] = useState('https://degree-dame-charger-charger.trycloudflare.com/api/chat/cloud/');
+  const [customUrl, setCustomUrl] = useState('https://did-delhi-processor-historical.trycloudflare.com/api/chat/cloud/');
 
   const addResult = (result: TestResult) => {
     setResults(prev => [...prev, result]);
