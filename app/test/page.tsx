@@ -11,9 +11,14 @@ interface TestResult {
 }
 
 export default function CORSTestPage() {
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
   const [results, setResults] = useState<TestResult[]>([]);
   const [isTesting, setIsTesting] = useState(false);
+<<<<<<< HEAD
   const [customUrl, setCustomUrl] = useState('https://did-delhi-processor-historical.trycloudflare.com/api/chat/cloud/');
+=======
+  const [customUrl, setCustomUrl] = useState(`${API_BASE_URL}/api/chat/`);
+>>>>>>> ddc78c0 (cambios realizados para conectar a render)
 
   const addResult = (result: TestResult) => {
     setResults(prev => [...prev, result]);
@@ -44,7 +49,7 @@ export default function CORSTestPage() {
 
       const optionsHeaders = Object.fromEntries(optionsResponse.headers.entries());
       const hasCorsHeaders = optionsHeaders['access-control-allow-origin'] !== undefined;
-      
+
       addResult({
         name: '1. Preflight OPTIONS',
         status: hasCorsHeaders ? 'success' : 'error',
@@ -123,8 +128,8 @@ export default function CORSTestPage() {
         addResult({
           name: '3. CSRF Test',
           status: csrfResponse.status !== 403 ? 'success' : 'warning',
-          message: csrfResponse.status !== 403 ? 
-            '✅ CSRF no está bloqueando' : 
+          message: csrfResponse.status !== 403 ?
+            '✅ CSRF no está bloqueando' :
             '⚠️ CSRF puede estar bloqueando (403)',
           details: `Status: ${csrfResponse.status}`,
           time: csrfTime
@@ -161,8 +166,8 @@ export default function CORSTestPage() {
         addResult({
           name: '4. Diferente Origen',
           status: originResponse.ok ? 'success' : 'warning',
-          message: originResponse.ok ? 
-            '✅ Origen diferente permitido' : 
+          message: originResponse.ok ?
+            '✅ Origen diferente permitido' :
             '⚠️ Origen diferente rechazado',
           details: `Status: ${originResponse.status}`,
           time: originTime
@@ -196,8 +201,8 @@ export default function CORSTestPage() {
         addResult({
           name: '5. Cloudflare Check',
           status: cfResponse.status !== 403 ? 'success' : 'warning',
-          message: cfResponse.status !== 403 ? 
-            '✅ Cloudflare accesible' : 
+          message: cfResponse.status !== 403 ?
+            '✅ Cloudflare accesible' :
             '⚠️ Cloudflare puede estar bloqueando',
           details: `Status: ${cfResponse.status}`,
           time: cfTime

@@ -15,8 +15,13 @@ interface ChatResponse {
 }
 
 // URL base y path separados para mejor mantenimiento
+<<<<<<< HEAD
 const API_BASE_URL = 'https://did-delhi-processor-historical.trycloudflare.com';
 const API_CHAT_PATH = '/api/chat/cloud/';
+=======
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+const API_CHAT_PATH = '/api/chat/';
+>>>>>>> ddc78c0 (cambios realizados para conectar a render)
 const CHAT_API_URL = `${API_BASE_URL}${API_CHAT_PATH}`;
 
 export default function ChatPage() {
@@ -139,7 +144,7 @@ export default function ChatPage() {
     } catch (error: any) {
       const errorMessage: Message = { 
         id: Date.now(), 
-        text: `❌ Falló la conexión: ${error.message}`, 
+        text: `Falló la conexión: ${error.message}`, 
         sender: 'bot' 
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -152,7 +157,7 @@ export default function ChatPage() {
     <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="flex flex-col flex-1 max-w-4xl w-full mx-auto h-full p-4">
         
-        {/* Encabezado con botón de test */}
+        {/*test*/}
         <header className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
