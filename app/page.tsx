@@ -15,13 +15,10 @@ interface ChatResponse {
 }
 
 // URL base y path separados para mejor mantenimiento
-<<<<<<< HEAD
-const API_BASE_URL = 'https://did-delhi-processor-historical.trycloudflare.com';
-const API_CHAT_PATH = '/api/chat/cloud/';
-=======
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
+// Para mostrar al usuario la URL real aunque usemos proxy interno
+const DISPLAY_API_URL = 'https://sky-blue-onrn.onrender.com';
 const API_CHAT_PATH = '/api/chat/';
->>>>>>> ddc78c0 (cambios realizados para conectar a render)
 const CHAT_API_URL = `${API_BASE_URL}${API_CHAT_PATH}`;
 
 export default function ChatPage() {
@@ -40,14 +37,14 @@ export default function ChatPage() {
     if (!input.trim() || isLoading) return;
 
     const userMessage: Message = { id: Date.now(), text: input.trim(), sender: 'user' };
-    
+
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
     try {
       console.log('📤 Enviando mensaje a:', CHAT_API_URL);
-      
+
       // Añadir timeout para evitar esperas
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos
@@ -68,32 +65,33 @@ export default function ChatPage() {
       }
 
       const data: ChatResponse = await response.json();
-      
-      const botMessage: Message = { 
-        id: Date.now() + 1, 
-        text: data.response, 
-        sender: 'bot' 
+
+      const botMessage: Message = {
+        id: Date.now() + 1,
+        text: data.response,
+        sender: 'bot'
       };
 
       setMessages(prev => [...prev, botMessage]);
 
     } catch (error: any) {
       console.error('❌ Error completo:', error);
-      
+      console.log('🔍 Debug Info:', { CHAT_API_URL, errorName: error.name, errorMessage: error.message });
+
       let errorText = '❌ Error de conexión';
-      
+
       if (error.name === 'AbortError') {
         errorText = '⏰ La solicitud tardó demasiado tiempo. Intenta nuevamente.';
       } else if (error.message.includes('Failed to fetch')) {
-        errorText = `🌐 Error de conexión con la API\n\n• URL: ${API_BASE_URL}\n• Path: ${API_CHAT_PATH}\n\nVerifica:\n• Tu conexión a internet\n• Que Cloudflare esté funcionando\n• Que la URL sea accesible`;
+        errorText = `🌐 Error de conexión (Failed to fetch)\n\n• URL Intentada: ${CHAT_API_URL}\n• Localhost accesible: SI/NO?\n\nVerifica que 'npm run dev' esté corriendo y no tenga errores.`;
       } else {
-        errorText = `❌ Error: ${error.message}`;
+        errorText = `❌ Error: ${error.message}\nURL: ${CHAT_API_URL}`;
       }
 
-      const errorMessage: Message = { 
-        id: Date.now() + 1, 
-        text: errorText, 
-        sender: 'bot' 
+      const errorMessage: Message = {
+        id: Date.now() + 1,
+        text: errorText,
+        sender: 'bot'
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -132,20 +130,20 @@ export default function ChatPage() {
       clearTimeout(timeoutId);
 
       if (response.ok) {
-        const testMessage: Message = { 
-          id: Date.now(), 
-          text: '✅ Conexión exitosa con la API', 
-          sender: 'bot' 
+        const testMessage: Message = {
+          id: Date.now(),
+          text: '✅ Conexión exitosa con la API',
+          sender: 'bot'
         };
         setMessages(prev => [...prev, testMessage]);
       } else {
         throw new Error(`HTTP ${response.status}`);
       }
     } catch (error: any) {
-      const errorMessage: Message = { 
-        id: Date.now(), 
-        text: `Falló la conexión: ${error.message}`, 
-        sender: 'bot' 
+      const errorMessage: Message = {
+        id: Date.now(),
+        text: `Falló la conexión: ${error.message}`,
+        sender: 'bot'
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -156,7 +154,7 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="flex flex-col flex-1 max-w-4xl w-full mx-auto h-full p-4">
-        
+
         {/*test*/}
         <header className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
           <div className="flex items-center justify-between">
@@ -169,7 +167,7 @@ export default function ChatPage() {
                   Lynda Carolyn Chatbot
                 </h1>
                 <p className="text-sm text-gray-600">
-                  Base URL: {API_BASE_URL}
+                  Base URL: {DISPLAY_API_URL}
                 </p>
                 <p className="text-xs text-gray-500">
                   Endpoint: {API_CHAT_PATH}
@@ -241,8 +239,8 @@ export default function ChatPage() {
               )}
 
               {messages.map((msg) => (
-                <div 
-                  key={msg.id} 
+                <div
+                  key={msg.id}
                   className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
                 >
                   <div className="flex max-w-[85%] space-x-3">
@@ -251,12 +249,11 @@ export default function ChatPage() {
                         AI
                       </div>
                     )}
-                    <div 
-                      className={`px-4 py-3 rounded-2xl text-[15px] leading-relaxed whitespace-pre-wrap shadow-sm ${
-                        msg.sender === 'user' 
-                          ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-md' 
-                          : 'bg-white text-gray-800 rounded-tl-md border border-gray-200'
-                      }`}
+                    <div
+                      className={`px-4 py-3 rounded-2xl text-[15px] leading-relaxed whitespace-pre-wrap shadow-sm ${msg.sender === 'user'
+                        ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-md'
+                        : 'bg-white text-gray-800 rounded-tl-md border border-gray-200'
+                        }`}
                     >
                       {msg.text}
                     </div>
@@ -307,11 +304,10 @@ export default function ChatPage() {
                 </div>
                 <button
                   onClick={handleSendMessage}
-                  className={`p-4 px-6 text-white rounded-xl font-semibold transition duration-200 shadow-sm ${
-                    isLoading || !input.trim()
-                      ? 'bg-gray-400 cursor-not-allowed' 
-                      : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transform hover:scale-105'
-                  }`}
+                  className={`p-4 px-6 text-white rounded-xl font-semibold transition duration-200 shadow-sm ${isLoading || !input.trim()
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transform hover:scale-105'
+                    }`}
                   disabled={isLoading || !input.trim()}
                 >
                   {isLoading ? (
@@ -322,7 +318,7 @@ export default function ChatPage() {
                 </button>
               </div>
               <div className="text-xs text-gray-500 text-center mt-3">
-                Presiona Enter para enviar • Usando: {API_BASE_URL}
+                Presiona Enter para enviar • Usando: {DISPLAY_API_URL}
               </div>
             </div>
           </div>

@@ -11,14 +11,10 @@ interface TestResult {
 }
 
 export default function CORSTestPage() {
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
   const [results, setResults] = useState<TestResult[]>([]);
   const [isTesting, setIsTesting] = useState(false);
-<<<<<<< HEAD
-  const [customUrl, setCustomUrl] = useState('https://did-delhi-processor-historical.trycloudflare.com/api/chat/cloud/');
-=======
   const [customUrl, setCustomUrl] = useState(`${API_BASE_URL}/api/chat/`);
->>>>>>> ddc78c0 (cambios realizados para conectar a render)
 
   const addResult = (result: TestResult) => {
     setResults(prev => [...prev, result]);
