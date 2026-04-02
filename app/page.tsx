@@ -15,7 +15,7 @@ interface ChatResponse {
 }
 
 // URL base y path separados para mejor mantenimiento
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
+const API_BASE_URL = process.env.API_BASE_URL ?? '';
 // Para mostrar al usuario la URL real aunque usemos proxy interno
 const DISPLAY_API_URL = 'https://sky-blue-onrn.onrender.com';
 const API_CHAT_PATH = '/api/chat/';

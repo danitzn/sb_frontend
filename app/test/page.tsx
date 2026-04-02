@@ -11,7 +11,7 @@ interface TestResult {
 }
 
 export default function CORSTestPage() {
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
+  const API_BASE_URL = process.env.API_BASE_URL ?? '';
   const [results, setResults] = useState<TestResult[]>([]);
   const [isTesting, setIsTesting] = useState(false);
   const [customUrl, setCustomUrl] = useState(`${API_BASE_URL}/api/chat/`);
