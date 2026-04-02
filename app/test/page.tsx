@@ -15,8 +15,7 @@ export default function CORSTestPage() {
   const API_CHAT_PATH = process.env.API_CHAT_PATH;
   const [results, setResults] = useState<TestResult[]>([]);
   const [isTesting, setIsTesting] = useState(false);
-  const [customUrl, setCustomUrl] = useState(`${API_BASE_URL}${API_CHAT_PATH}`);
-
+  const [customUrl, setCustomUrl] = useState(`${API_BASE_URL}${API_CHAT_PATH}`);  
   const addResult = (result: TestResult) => {
     setResults(prev => [...prev, result]);
   };
