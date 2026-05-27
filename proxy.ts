@@ -19,8 +19,9 @@ export function proxy(request: NextRequest) {
 
         // 2. Preparar headers para el backend (Spoofing)
         const requestHeaders = new Headers(request.headers)
-        const targetHost = 'sky-blue-onrn.onrender.com'
-        const targetUrl = `https://${targetHost}`
+        const API_BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:8000'
+        const targetUrl = API_BASE_URL.replace(/\/+$/, '')
+        const targetHost = new URL(targetUrl).host
 
         requestHeaders.set('Origin', targetUrl)
         requestHeaders.set('Referer', targetUrl)
