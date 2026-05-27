@@ -21,7 +21,9 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [chatMode, setChatMode] = useState<ChatMode>('cloud');
+  const [chatMode, setChatMode] = useState<ChatMode>(
+    (process.env.NEXT_PUBLIC_API_CHAT_PATH as ChatMode) || 'cloud'
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // URL dinámica según el modo — nunca usa variables de entorno en el cliente
