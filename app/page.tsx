@@ -73,14 +73,16 @@ export default function ChatPage() {
 
       setMessages(prev => [...prev, botMessage]);
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ Error:', error);
 
+      const errorName = error instanceof Error ? error.name : '';
+      const errorDetail = error instanceof Error ? error.message : String(error);
       let errorText = '❌ Error de conexión';
-      if (error.name === 'AbortError') {
+      if (errorName === 'AbortError') {
         errorText = '⏰ La solicitud tardó demasiado. Intenta nuevamente.';
       } else {
-        errorText = `❌ Error: ${error.message}`;
+        errorText = `❌ Error: ${errorDetail}`;
       }
 
       setMessages(prev => [...prev, {
@@ -124,10 +126,11 @@ export default function ChatPage() {
           : `❌ Error HTTP ${response.status}`,
         sender: 'bot',
       }]);
-    } catch (error: any) {
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
       setMessages(prev => [...prev, {
         id: Date.now(),
-        text: `❌ Falló la conexión: ${error.message}`,
+        text: `❌ Falló la conexión: ${detail}`,
         sender: 'bot',
       }]);
     } finally {

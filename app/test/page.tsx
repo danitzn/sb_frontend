@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 
 interface TestResult {
   name: string;
@@ -80,15 +80,15 @@ export default function CORSTestPage() {
           addResult({
             name: '2. POST Request',
             status: 'success',
-            message: `✅ POST exitoso - Status: ${postResponse.status}`,
+            message: `POST exitoso - Status: ${postResponse.status}`,
             details: `Response: ${JSON.stringify(data, null, 2)}\nCORS Headers: ${postHasCors ? 'SÍ' : 'NO'}`,
             time: postTime
           });
-        } catch (e) {
+        } catch {
           addResult({
             name: '2. POST Request',
             status: 'warning',
-            message: `⚠️ POST con status ${postResponse.status} pero respuesta no JSON`,
+            message: `POST con status ${postResponse.status} pero respuesta no JSON`,
             details: `Headers: ${JSON.stringify(postHeaders, null, 2)}`,
             time: postTime
           });
@@ -97,7 +97,7 @@ export default function CORSTestPage() {
         addResult({
           name: '2. POST Request',
           status: 'error',
-          message: `❌ POST falló - Status: ${postResponse.status}`,
+          message: `POST falló - Status: ${postResponse.status}`,
           details: `CORS: ${postHasCors ? 'SÍ' : 'NO'}\nHeaders: ${JSON.stringify(postHeaders, null, 2)}`,
           time: postTime
         });
@@ -125,8 +125,8 @@ export default function CORSTestPage() {
           name: '3. CSRF Test',
           status: csrfResponse.status !== 403 ? 'success' : 'warning',
           message: csrfResponse.status !== 403 ?
-            '✅ CSRF no está bloqueando' :
-            '⚠️ CSRF puede estar bloqueando (403)',
+            'CSRF no está bloqueando' :
+            'CSRF puede estar bloqueando (403)',
           details: `Status: ${csrfResponse.status}`,
           time: csrfTime
         });
@@ -134,7 +134,7 @@ export default function CORSTestPage() {
         addResult({
           name: '3. CSRF Test',
           status: 'error',
-          message: '❌ Error en test CSRF',
+          message: 'Error en test CSRF',
           details: `${error}`,
           time: Date.now() - csrfStart
         });
@@ -163,8 +163,8 @@ export default function CORSTestPage() {
           name: '4. Diferente Origen',
           status: originResponse.ok ? 'success' : 'warning',
           message: originResponse.ok ?
-            '✅ Origen diferente permitido' :
-            '⚠️ Origen diferente rechazado',
+            'Origen diferente permitido' :
+            'Origen diferente rechazado',
           details: `Status: ${originResponse.status}`,
           time: originTime
         });
@@ -172,7 +172,7 @@ export default function CORSTestPage() {
         addResult({
           name: '4. Diferente Origen',
           status: 'error',
-          message: '❌ Error con origen diferente',
+          message: 'Error con origen diferente',
           details: `${error}`,
           time: Date.now() - originStart
         });
@@ -198,8 +198,8 @@ export default function CORSTestPage() {
           name: '5. Cloudflare Check',
           status: cfResponse.status !== 403 ? 'success' : 'warning',
           message: cfResponse.status !== 403 ?
-            '✅ Cloudflare accesible' :
-            '⚠️ Cloudflare puede estar bloqueando',
+            'Cloudflare accesible' :
+            'Cloudflare puede estar bloqueando',
           details: `Status: ${cfResponse.status}`,
           time: cfTime
         });
@@ -207,18 +207,18 @@ export default function CORSTestPage() {
         addResult({
           name: '5. Cloudflare Check',
           status: 'error',
-          message: '❌ Error accediendo a Cloudflare',
+          message: 'Error accediendo a Cloudflare',
           details: `${error}`,
           time: Date.now() - cloudflareStart
         });
       }
 
-    } catch (error: any) {
+    } catch (error) {
       addResult({
         name: 'Error General',
         status: 'error',
-        message: '❌ Error en el diagnóstico',
-        details: error.toString()
+        message: 'Error en el diagnóstico',
+        details: error instanceof Error ? error.message : String(error)
       });
     } finally {
       const totalTime = Date.now() - startTime;
@@ -259,23 +259,23 @@ export default function CORSTestPage() {
         addResult({
           name: 'Test Específico',
           status: 'success',
-          message: `✅ Request exitoso - CORS: ${hasCors ? 'SÍ' : 'NO'}`,
+          message: `Request exitoso - CORS: ${hasCors ? 'SÍ' : 'NO'}`,
           details: `Status: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`
         });
       } else {
         addResult({
           name: 'Test Específico',
           status: 'error',
-          message: `❌ Request falló - Status: ${response.status}`,
+          message: `Request falló - Status: ${response.status}`,
           details: `CORS: ${hasCors ? 'SÍ' : 'NO'}\nHeaders: ${JSON.stringify(headers, null, 2)}`
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       addResult({
         name: 'Test Específico',
         status: 'error',
-        message: '❌ Error de conexión',
-        details: error.toString()
+        message: 'Error de conexión',
+        details: error instanceof Error ? error.message : String(error)
       });
     } finally {
       setIsTesting(false);
@@ -406,11 +406,11 @@ export default function CORSTestPage() {
         {/* Information */}
         {results.length === 0 && !isTesting && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 mt-6">
-            <h3 className="text-lg font-semibold text-yellow-800 mb-2">💡 Información Importante</h3>
+            <h3 className="text-lg font-semibold text-yellow-800 mb-2">Información Importante</h3>
             <ul className="text-yellow-700 space-y-1 text-sm">
               <li>• Tu configuración Django CORS parece correcta</li>
               <li>• El problema podría ser CSRF middleware o Cloudflare</li>
-              <li>• Usa "Diagnóstico Completo CORS" para identificar el problema exacto</li>
+              <li>• Usa &quot;Diagnóstico Completo CORS&quot; para identificar el problema exacto</li>
               <li>• Si CSRF está bloqueando, considera usar <code>@csrf_exempt</code> en tu view</li>
             </ul>
           </div>
