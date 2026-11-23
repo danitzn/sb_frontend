@@ -1,45 +1,23 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { getBackendUrl } from './lib/backend';
 
+/**
+ * El navegador llama a /api/proxy/... en el mismo origen, así que no hace
+ * falta CORS. Aquí solo se reescriben Origin/Referer/Host para que el backend
+ * (Django detrás de Cloudflare) acepte la petición reenviada por el rewrite.
+ */
 export function proxy(request: NextRequest) {
-    const isApi = request.nextUrl.pathname.startsWith('/api/');
+  const targetUrl = getBackendUrl();
+  const requestHeaders = new Headers(request.headers);
 
-    if (isApi) {
-        // 1. Manejar Preflight (OPTIONS) directamente
-        if (request.method === 'OPTIONS') {
-            return new NextResponse(null, {
-                status: 200,
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-                    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-                },
-            });
-        }
+  requestHeaders.set('Origin', targetUrl);
+  requestHeaders.set('Referer', targetUrl);
+  requestHeaders.set('Host', new URL(targetUrl).host);
 
-        // 2. Preparar headers para el backend (Spoofing)
-        const requestHeaders = new Headers(request.headers)
-        const API_BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:8000'
-        const targetUrl = API_BASE_URL.replace(/\/+$/, '')
-        const targetHost = new URL(targetUrl).host
-
-        requestHeaders.set('Origin', targetUrl)
-        requestHeaders.set('Referer', targetUrl)
-        requestHeaders.set('Host', targetHost)
-
-        // 3. Continuar y modificar respuesta
-        const response = NextResponse.next({
-            request: {
-                headers: requestHeaders,
-            },
-        })
-
-        // 4. Asegurar CORS en la respuesta final
-        response.headers.set('Access-Control-Allow-Origin', '*')
-        return response
-    }
+  return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
 export const config = {
-    matcher: '/api/:path*',
-}
+  matcher: '/api/:path*',
+};

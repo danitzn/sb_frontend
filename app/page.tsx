@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 
 interface Message {
-  id: number;
+  id: string;
   text: string;
   sender: 'user' | 'bot';
   model?: string;
@@ -17,16 +17,38 @@ interface ChatResponse {
 
 type ChatMode = 'cloud' | 'local';
 
+/** Los LLM pueden tardar bastante en responder. */
+const CHAT_TIMEOUT_MS = 60_000;
+const TEST_TIMEOUT_MS = 10_000;
+
+const DEFAULT_CHAT_MODE: ChatMode =
+  process.env.NEXT_PUBLIC_API_CHAT_PATH === 'local' ? 'local' : 'cloud';
+
+const SUGGESTIONS = [
+  { icon: '💰', text: '¿Qué precios tienen los helados?' },
+  { icon: '📦', text: '¿Hay Cervezas?' },
+  { icon: '🔍', text: 'Muéstrame productos en oferta' },
+  { icon: '📋', text: '¿Qué marcas de Lácteos tienen?' },
+];
+
+const newId = () => crypto.randomUUID();
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'AbortError';
+}
+
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [chatMode, setChatMode] = useState<ChatMode>(
-    (process.env.NEXT_PUBLIC_API_CHAT_PATH as ChatMode) || 'cloud'
-  );
+  const [chatMode, setChatMode] = useState<ChatMode>(DEFAULT_CHAT_MODE);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // URL dinámica según el modo — nunca usa variables de entorno en el cliente
+  // Ruta relativa: el rewrite de next.config.ts la reenvía al backend
   const CHAT_API_URL = `/api/proxy/chat/${chatMode}/`;
 
   const scrollToBottom = () => {
@@ -38,14 +60,14 @@ export default function ChatPage() {
   const handleSendMessage = useCallback(async () => {
     if (!input.trim() || isLoading) return;
 
-    const userMessage: Message = { id: Date.now(), text: input.trim(), sender: 'user' };
+    const userMessage: Message = { id: newId(), text: input.trim(), sender: 'user' };
 
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), CHAT_TIMEOUT_MS);
 
     try {
       const response = await fetch(CHAT_API_URL, {
@@ -55,8 +77,6 @@ export default function ChatPage() {
         signal: controller.signal,
       });
 
-      clearTimeout(timeoutId);
-
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Error HTTP ${response.status}: ${errorText}`);
@@ -65,7 +85,7 @@ export default function ChatPage() {
       const data: ChatResponse = await response.json();
 
       const botMessage: Message = {
-        id: Date.now() + 1,
+        id: newId(),
         text: data.response,
         sender: 'bot',
         model: data.model_used,
@@ -73,24 +93,20 @@ export default function ChatPage() {
 
       setMessages(prev => [...prev, botMessage]);
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('❌ Error:', error);
 
-      const errorName = error instanceof Error ? error.name : '';
-      const errorDetail = error instanceof Error ? error.message : String(error);
-      let errorText = '❌ Error de conexión';
-      if (errorName === 'AbortError') {
-        errorText = '⏰ La solicitud tardó demasiado. Intenta nuevamente.';
-      } else {
-        errorText = `❌ Error: ${errorDetail}`;
-      }
+      const errorText = isAbortError(error)
+        ? '⏰ La solicitud tardó demasiado. Intenta nuevamente.'
+        : `❌ Error: ${errorMessage(error)}`;
 
       setMessages(prev => [...prev, {
-        id: Date.now() + 1,
+        id: newId(),
         text: errorText,
         sender: 'bot',
       }]);
     } finally {
+      clearTimeout(timeoutId);
       setIsLoading(false);
     }
   }, [input, isLoading, CHAT_API_URL]);
@@ -106,10 +122,9 @@ export default function ChatPage() {
 
   const testConnection = async () => {
     setIsLoading(true);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), TEST_TIMEOUT_MS);
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-
       const response = await fetch(CHAT_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -117,35 +132,35 @@ export default function ChatPage() {
         signal: controller.signal,
       });
 
-      clearTimeout(timeoutId);
-
       setMessages(prev => [...prev, {
-        id: Date.now(),
+        id: newId(),
         text: response.ok
           ? `✅ Conexión exitosa con la API (modo: ${chatMode})`
           : `❌ Error HTTP ${response.status}`,
         sender: 'bot',
       }]);
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
+    } catch (error: unknown) {
       setMessages(prev => [...prev, {
-        id: Date.now(),
-        text: `❌ Falló la conexión: ${detail}`,
+        id: newId(),
+        text: isAbortError(error)
+          ? '⏰ La API no respondió a tiempo'
+          : `❌ Falló la conexión: ${errorMessage(error)}`,
         sender: 'bot',
       }]);
     } finally {
+      clearTimeout(timeoutId);
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="flex flex-col h-screen bg-linear-to-br from-blue-50 to-indigo-100">
       <div className="flex flex-col flex-1 max-w-4xl w-full mx-auto h-full p-4">
 
         <header className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-linear-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
                 <span className="text-2xl text-white">🤖</span>
               </div>
               <div>
@@ -203,7 +218,7 @@ export default function ChatPage() {
 
         <div className="flex-1 bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
           <div className="flex flex-col h-full">
-            <div className="bg-gradient-to-r from-gray-50 to-blue-50 p-4 border-b border-gray-200">
+            <div className="bg-linear-to-r from-gray-50 to-blue-50 p-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
@@ -215,10 +230,10 @@ export default function ChatPage() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gradient-to-b from-white to-blue-50/30">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-linear-to-b from-white to-blue-50/30">
               {messages.length === 0 && (
                 <div className="text-center py-12">
-                  <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-purple-100 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                  <div className="w-20 h-20 bg-linear-to-r from-blue-100 to-purple-100 rounded-3xl flex items-center justify-center mx-auto mb-4">
                     <span className="text-3xl">🛒</span>
                   </div>
                   <h3 className="text-xl font-semibold text-gray-800 mb-2">
@@ -228,19 +243,15 @@ export default function ChatPage() {
                     Haz clic en &quot;Test&quot; para verificar que la API esté funcionando.
                   </p>
                   <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3 max-w-lg mx-auto">
-                    {[
-                      '💰 "¿Qué precios tienen los helados?"',
-                      '📦 "¿Hay Cervezas?"',
-                      '🔍 "Muéstrame productos en oferta"',
-                      '📋 "¿Qué marcas de Lácteos tienen?"',
-                    ].map((suggestion) => (
-                      <div
-                        key={suggestion}
-                        onClick={() => setInput(suggestion.replace(/[""]/g, '').replace(/^[^\s]+\s/, ''))}
-                        className="bg-blue-50 rounded-lg p-3 text-sm text-gray-700 border border-blue-100 cursor-pointer hover:bg-blue-100 transition duration-200"
+                    {SUGGESTIONS.map(({ icon, text }) => (
+                      <button
+                        type="button"
+                        key={text}
+                        onClick={() => setInput(text)}
+                        className="bg-blue-50 rounded-lg p-3 text-sm text-left text-gray-700 border border-blue-100 cursor-pointer hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
                       >
-                        {suggestion}
-                      </div>
+                        {icon} &quot;{text}&quot;
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -253,7 +264,7 @@ export default function ChatPage() {
                 >
                   <div className="flex max-w-[85%] space-x-3">
                     {msg.sender === 'bot' && (
-                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                      <div className="shrink-0 w-8 h-8 bg-linear-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
                         AI
                       </div>
                     )}
@@ -261,7 +272,7 @@ export default function ChatPage() {
                       <div
                         className={`px-4 py-3 rounded-2xl text-[15px] leading-relaxed whitespace-pre-wrap shadow-sm ${
                           msg.sender === 'user'
-                            ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-md'
+                            ? 'bg-linear-to-r from-blue-500 to-blue-600 text-white rounded-br-md'
                             : 'bg-white text-gray-800 rounded-tl-md border border-gray-200'
                         }`}
                       >
@@ -274,7 +285,7 @@ export default function ChatPage() {
                       )}
                     </div>
                     {msg.sender === 'user' && (
-                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-gray-500 to-gray-700 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                      <div className="shrink-0 w-8 h-8 bg-linear-to-r from-gray-500 to-gray-700 rounded-full flex items-center justify-center text-white text-sm font-bold">
                         TÚ
                       </div>
                     )}
@@ -285,7 +296,7 @@ export default function ChatPage() {
               {isLoading && (
                 <div className="flex justify-start animate-fade-in">
                   <div className="flex space-x-3">
-                    <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                    <div className="shrink-0 w-8 h-8 bg-linear-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
                       AI
                     </div>
                     <div className="px-4 py-3 rounded-2xl bg-white border border-gray-200 shadow-sm">
@@ -313,7 +324,7 @@ export default function ChatPage() {
                     className="w-full p-4 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 text-gray-800 placeholder-gray-500 transition duration-200"
                     disabled={isLoading}
                   />
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
                     ↵ Enter
                   </div>
                 </div>
@@ -322,7 +333,7 @@ export default function ChatPage() {
                   className={`p-4 px-6 text-white rounded-xl font-semibold transition duration-200 shadow-sm ${
                     isLoading || !input.trim()
                       ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transform hover:scale-105'
+                      : 'bg-linear-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 hover:scale-105'
                   }`}
                   disabled={isLoading || !input.trim()}
                 >
@@ -344,16 +355,6 @@ export default function ChatPage() {
           Powered by AI Assistant • 2026
         </footer>
       </div>
-
-      <style jsx>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 }

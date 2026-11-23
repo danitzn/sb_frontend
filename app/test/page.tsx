@@ -11,11 +11,12 @@ interface TestResult {
 }
 
 export default function CORSTestPage() {
-  const API_BASE_URL = process.env.API_BASE_URL ?? '';
-  const API_CHAT_PATH = process.env.API_CHAT_PATH;
+  // En el cliente solo existen las variables NEXT_PUBLIC_*; por defecto se prueba
+  // la ruta del proxy (mismo origen), igual que la usa el chat.
+  const API_CHAT_PATH = process.env.NEXT_PUBLIC_API_CHAT_PATH ?? 'cloud';
   const [results, setResults] = useState<TestResult[]>([]);
   const [isTesting, setIsTesting] = useState(false);
-  const [customUrl, setCustomUrl] = useState(`${API_BASE_URL}${API_CHAT_PATH}`);  
+  const [customUrl, setCustomUrl] = useState(`/api/proxy/chat/${API_CHAT_PATH}/`);
   const addResult = (result: TestResult) => {
     setResults(prev => [...prev, result]);
   };
@@ -213,7 +214,7 @@ export default function CORSTestPage() {
         });
       }
 
-    } catch (error) {
+    } catch (error: unknown) {
       addResult({
         name: 'Error General',
         status: 'error',
@@ -270,7 +271,7 @@ export default function CORSTestPage() {
           details: `CORS: ${hasCors ? 'SÍ' : 'NO'}\nHeaders: ${JSON.stringify(headers, null, 2)}`
         });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       addResult({
         name: 'Test Específico',
         status: 'error',
@@ -307,13 +308,13 @@ export default function CORSTestPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-8 px-4">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 to-blue-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-linear-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
                 <span className="text-2xl text-white">🔍</span>
               </div>
               <div>
@@ -382,8 +383,8 @@ export default function CORSTestPage() {
                   <span className="text-lg">{getStatusIcon(result.status)}</span>
                   <h3 className="font-semibold text-lg">{result.name}</h3>
                 </div>
-                {result.time && (
-                  <span className="text-sm bg-white bg-opacity-50 px-2 py-1 rounded">
+                {result.time !== undefined && (
+                  <span className="text-sm bg-white/50 px-2 py-1 rounded">
                     {result.time}ms
                   </span>
                 )}
@@ -394,7 +395,7 @@ export default function CORSTestPage() {
                   <summary className="cursor-pointer text-sm font-medium hover:text-blue-600">
                     Ver detalles
                   </summary>
-                  <pre className="mt-2 p-3 bg-black bg-opacity-10 rounded-lg text-xs overflow-x-auto">
+                  <pre className="mt-2 p-3 bg-black/10 rounded-lg text-xs overflow-x-auto">
                     {result.details}
                   </pre>
                 </details>
